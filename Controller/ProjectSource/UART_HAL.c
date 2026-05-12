@@ -24,20 +24,16 @@ void UARTHAL_Init(void)
     rxHead = 0;
     rxTail = 0;
 
-    // Turn UART off
     U2MODEbits.ON = 0;
     U2STAbits.UTXEN = 0;
     U2STAbits.URXEN = 0;
 
-    // Baud rate
     U2MODEbits.BRGH = 0;
     U2BRG = UART_BRG_VALUE;
 
-    // 8N1 format
-    U2MODEbits.PDSEL = 0b00;      // 8-bit data, no parity
-    U2MODEbits.STSEL = 0;         // 1 stop bit
+    U2MODEbits.PDSEL = 0b00;
+    U2MODEbits.STSEL = 0;
 
-    // Normal UART mode
     U2MODEbits.SIDL = 0;
     U2MODEbits.IREN = 0;
     U2MODEbits.RTSMD = 0;
@@ -47,13 +43,10 @@ void UARTHAL_Init(void)
     U2MODEbits.ABAUD = 0;
     U2MODEbits.RXINV = 0;
 
-    // RX interrupt when each character is received
     U2STAbits.URXISEL = 0b00;
 
-    // TX interrupt not used
     IEC1bits.U2TXIE = 0;
 
-    // Clear error and interrupt flags
     if (U2STAbits.OERR) {
         U2STAbits.OERR = 0;
     }
@@ -62,17 +55,12 @@ void UARTHAL_Init(void)
     IFS1bits.U2TXIF = 0;
     IFS1bits.U2EIF = 0;
 
-    // Configure RX interrupt priority
     IPC9bits.U2IP = 2;
     IPC9bits.U2IS = 0;
 
-    // Enable RX interrupt
     IEC1bits.U2RXIE = 1;
-
-    // Turn UART on
     U2MODEbits.ON = 1;
 
-    // Enable transmitter and receiver
     U2STAbits.UTXEN = 1;
     U2STAbits.URXEN = 1;
 }
@@ -81,11 +69,6 @@ void UARTHAL_Init(void)
 static void UARTHAL_ConfigPins(void)
 {
 
-    // Disable analog function on pins
-    //ANSELBbits.ANSB10 = 0;
-    //ANSELBbits.ANSB11 = 0;
-
-    // Set directions
     TRISBbits.TRISB10 = 0;     // TX output
     TRISBbits.TRISB11 = 1;    // RX input
 
@@ -116,19 +99,6 @@ void UARTHAL_SendBytes(const uint8_t *data, uint16_t length)
     }
 }
 
-// void UARTHAL_SendString(const char *str)
-// {
-//     if (str == 0) {
-//         return;
-//     }
-
-//     while (*str != '\0') {
-//         UARTHAL_SendByte((uint8_t)(*str));
-//         str++;
-//     }
-// }
-
-
 bool UARTHAL_IsRxAvailable(void)
 {
     return rxHead != rxTail;
@@ -156,10 +126,6 @@ void UARTHAL_ClearRxBuffer(void)
     rxTail = 0;
 }
 
-// =======================================================
-// UART1 RX Interrupt
-// =======================================================
-
 void __ISR(_UART_2_VECTOR, IPL2SOFT) UART2_ISR(void)
 {
     if (IFS1bits.U2RXIF) {
@@ -179,7 +145,6 @@ void __ISR(_UART_2_VECTOR, IPL2SOFT) UART2_ISR(void)
         IFS1bits.U2RXIF = 0;
     }
 
-    // Clear overrun error
     if (U2STAbits.OERR) {
         U2STAbits.OERR = 0;
     }
