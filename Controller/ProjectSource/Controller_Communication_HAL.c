@@ -127,6 +127,8 @@ static void XBeeHAL_SendPacket(const XBeeTxPacket_t *packet)
     UARTHAL_SendBytes(frame, XBEE_TX_FRAME_SIZE);
 }
 
+
+// Not test yet
 static uint8_t XBeeHAL_CalculateChecksum(const uint8_t *frame, uint8_t frameSize)
 {
     uint16_t sum = 0;
@@ -138,6 +140,7 @@ static uint8_t XBeeHAL_CalculateChecksum(const uint8_t *frame, uint8_t frameSize
     return (uint8_t)(0xFF - (sum & 0xFF));
 }
 
+// Not test yet
 bool XBeeHAL_Update(void)
 {
     uint8_t byteRead;
@@ -199,7 +202,7 @@ bool XBeeHAL_Update(void)
     return gotPacket;
 }
 
-
+// Not test yet
 static bool XBeeHAL_ParseCompleteRxFrame(const uint8_t *frame)
 {
     if (frame == 0) {
@@ -245,7 +248,7 @@ static bool XBeeHAL_ParseCompleteRxFrame(const uint8_t *frame)
     return true;
 }
 
-
+// Not test yet
 bool XBeeHAL_GetLastRxPacket(XBeeRxPacket_t *packet)
 {
     if (packet == 0) {
@@ -260,7 +263,7 @@ bool XBeeHAL_GetLastRxPacket(XBeeRxPacket_t *packet)
     return true;
 }
 
-
+// Not test yet
 bool XBeeHAL_IsPairingSuccess(void)
 {
     if (!lastRxPacket.valid) {
