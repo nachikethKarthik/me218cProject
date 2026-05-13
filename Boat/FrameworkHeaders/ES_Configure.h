@@ -259,9 +259,12 @@ typedef enum
   ES_TIMEOUT,               /* signals that the timer has expired */
   ES_SHORT_TIMEOUT,         /* signals that a short timer has expired */
   /* User-defined events start here */
-  ES_NEW_KEY,               /* signals a new key received from terminal */
-  ES_LOCK,
-  ES_UNLOCK
+          ES_SET_PAIR_IND,
+          ES_SET_THRUSTERS,
+          ES_SET_DIGI_OUT,
+          ES_ALL_STOP,
+          ES_RX_FRAME
+
 }ES_EventType_t;
 
 /****************************************************************************/
@@ -328,8 +331,9 @@ typedef enum
 // definitions for the response functions to make it easier to check that
 // the timer number matches where the timer event will be routed
 // These symbolic names should be changed to be relevant to your application
-
+#define PAIRING_WATCHDOG_TIMER 0
 #define SERVICE0_TIMER 15
+
 
 
 #endif /* ES_CONFIGURE_H */
