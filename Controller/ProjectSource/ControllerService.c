@@ -24,7 +24,7 @@ static uint8_t MyPriority;
 bool InitControllerService(uint8_t Priority)
 {
   ES_Event_t ThisEvent;
-  DB_printf("Conotroller Service Start!\n");
+  DB_printf("Controller Service Start!\n");
   MyPriority = Priority;
   CurrentState = TestState;
   ThisEvent.EventType = ES_INIT;
@@ -114,6 +114,11 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
             {
                 DB_printf("i pressed\n");
                 XBeeHAL_SendIdle(XBEE_QUACKRAFT_TEAM5_ADDR);
+            }
+            else if ('p' == ThisEvent.EventParam)
+            {
+                DB_printf("p pressed\n");
+                XBeeHAL_SendPairing(XBEE_QUACKRAFT_TEAM5_ADDR,  XBEE_MALLARD_TEAM5_ADDR);
             }
         }
         break;
