@@ -151,7 +151,7 @@ static volatile uint8_t  rxFrameReadyLen = 0;
 // ---- Per-byte frame assembly state, lives entirely inside the ISR ----
 static volatile bool     InFrame      = false;
 static volatile uint8_t  FrameIdx     = 0;     // index of next byte to store
-static volatile uint16_t FrameLen  = 0;     // parsed from length bytes within the isr
+static volatile uint16_t WorkingFrameLen  = 0;     // parsed from length bytes within the isr
 static volatile uint8_t  LengthHi     = 0;
 static volatile uint8_t  RunningSum   = 0;
 static volatile uint8_t  rxFrameWorking[RX_FRAME_BUFFER_SIZE]; // working frame assembled within ISR, copied into FrameReady buffer upon receiving full frame
@@ -189,7 +189,7 @@ bool InitXBeeService(uint8_t Priority)
   Steam            = 0;
   InFrame          = false;
   FrameIdx         = 0;
-  FrameLen      = 0;
+  WorkingFrameLen      = 0;
   RunningSum       = 0;
   rxFrameReadyLen  = 0;
  
@@ -257,6 +257,43 @@ ES_Event_t RunXBeeService(ES_Event_t ThisEvent)
   /********************************************
    in here you write your service code
    *******************************************/
+   switch (ThisEvent.EventType)
+  {
+    case ES_INIT:
+    {
+      // Nothing extra to do on init; we boot in QR_UNPAIRED.
+      break;
+    }
+ 
+    case ES_RX_FRAME:
+    {
+      // The ISR just posted a complete, checksum-valid frame for us. The
+      // frame data is sitting in rxFrameReady.
+        DB_printf("\rNew frame received !\r\n");
+        uint8_t        frameLen = rxFrameReadyLen;
+        const uint8_t *frame    = (const uint8_t *)rxFrameReady;
+        HandleRxFrame(frame, frameLen);
+        break;
+    }
+ 
+    case ES_TIMEOUT:
+    {
+      if (ThisEvent.EventParam == PAIRING_WATCHDOG_TIMER)
+      {
+        // 4 s of silence from the paired Mallard Module -> unpair.
+        if (CurrentState == QC_PAIRED)
+        {
+          DB_printf("\rPairing watchdog expired, going Unpaired\r\n");
+          GoUnpaired();
+        }
+      }
+      break;
+    }
+ 
+    default:
+      break;
+  }
+   
   return ReturnEvent;
 }
 
@@ -312,13 +349,13 @@ void __ISR(_UART_2_VECTOR, IPL7SOFT) UART2_ISR(void)
       }
       else if (FrameIdx == 1)
       {
-        FrameLen = ((uint16_t)LengthHi << 8) | (uint16_t)b;
+        WorkingFrameLen = ((uint16_t)LengthHi << 8) | (uint16_t)b;
         FrameIdx++;
         // Bounds-check: if the announced length is impossibly large,
         // abandon this frame. We need room for ExpectedLen data bytes
         // PLUS one checksum byte; both go in rxFrameWorking, but only
         // the data bytes go into the "frame data" we hand to the FSM.
-        if (FrameLen == 0 || FrameLen > (RX_FRAME_BUFFER_SIZE - 1))
+        if (WorkingFrameLen == 0 || WorkingFrameLen > (RX_FRAME_BUFFER_SIZE - 1))
         {
           InFrame  = false;
           FrameIdx = 0;
@@ -329,7 +366,7 @@ void __ISR(_UART_2_VECTOR, IPL7SOFT) UART2_ISR(void)
         // FrameIdx >= 2 here. The next ExpectedLen bytes are the frame
         // data; the one after that is the checksum byte.
         uint16_t dataIdx = (uint16_t)FrameIdx - 2u; // 0-based into frame data
-        if (dataIdx < FrameLen)
+        if (dataIdx < WorkingFrameLen)
         {
           rxFrameWorking[dataIdx] = b;
           RunningSum += b;
@@ -346,11 +383,11 @@ void __ISR(_UART_2_VECTOR, IPL7SOFT) UART2_ISR(void)
             // Valid frame! Copy from the working buffer into the ready
             // buffer so the Run function can read it without contention
             // with the next frame's ongoing assembly.
-            for (uint16_t i = 0; i < FrameLen; i++)
+            for (uint16_t i = 0; i < WorkingFrameLen; i++)
             {
               rxFrameReady[i] = rxFrameWorking[i];
             }
-            rxFrameReadyLen = (uint8_t)FrameLen;
+            rxFrameReadyLen = (uint8_t)WorkingFrameLen;
  
             // Post ES_RX_FRAME from ISR context.
             ES_Event_t evt;
@@ -471,6 +508,7 @@ static void HandleRxFrame(const uint8_t *frame, uint8_t frameLen)
   // Check if API identifier is 0x81
   if (frame[RXF_API_ID] != XBEE_API_RX16)
   {
+    DB_printf("\rNew frame has the wrong API identifier !\r\n");
     return;
   }
   
@@ -539,16 +577,19 @@ static void HandleRxFrame(const uint8_t *frame, uint8_t frameLen)
     switch (status)
     {
       case STATUS_DRIVING:
+        DB_printf("\rDriving message received, handling it now\r\n");
         HandleDrivingMessage(joy1, joy2, digi);
         break;
  
       case STATUS_CHARGING:
+        DB_printf("\rCharging message received, handling it now\r\n");
         HandleChargingMessage();
         break;
  
       case STATUS_PAIRING:
         // Re-pairing ping from the same MM. Per protocol: do NOT refill
         // steam; respond with 0xFF in the charge byte.
+        DB_printf("\rPairing message received, handling it now\r\n");
         HandlePairingMessage(joy1, joy2);
         break;
  

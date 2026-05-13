@@ -91,7 +91,7 @@ bool InitTemplateService(uint8_t Priority)
  Author
      J. Edward Carryer, 10/23/11, 19:25
 ****************************************************************************/
-bool PostTemplateService(ES_Event_t ThisEvent)
+bool PostActuatorService(ES_Event_t ThisEvent)
 {
   return ES_PostToService(MyPriority, ThisEvent);
 }

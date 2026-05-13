@@ -263,7 +263,8 @@ typedef enum
           ES_SET_THRUSTERS,
           ES_SET_DIGI_OUT,
           ES_ALL_STOP,
-          ES_RX_FRAME
+          ES_RX_FRAME,
+          ES_NEW_KEY
 
 }ES_EventType_t;
 
