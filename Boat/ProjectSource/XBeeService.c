@@ -322,15 +322,17 @@ void __ISR(_UART_2_VECTOR, IPL7SOFT) UART2_ISR(void)
   while (U2STAbits.URXDA)
   {
     uint8_t b = (uint8_t)U2RXREG;
- 
+//    DB_printf("\rReading the receive buffer !\r\n");
     if (!InFrame)
     {
       // Looking for the XBee start delimiter.
       if (b == XBEE_START_DELIM)
       {
+//        DB_printf("\rInside a frame!\r\n");
         InFrame    = true;
         FrameIdx   = 0;
         RunningSum = 0;
+        
         // Don't store the start delimiter itself; it's not part of
         // the length or the checksum.
       }
@@ -540,7 +542,7 @@ static void HandleRxFrame(const uint8_t *frame, uint8_t frameLen)
       // New pairing -> full tank of steam.
       Steam = STEAM_MAX;
  
-      DB_printf("\rPaired with MM 0x%X%X\r\n",
+      DB_printf("\rPaired with MM %u %u\r\n",
                 PairedMM_AddrHi, PairedMM_AddrLo);
  
       // Tell the actuator service to indicate "paired".
