@@ -5,21 +5,7 @@
      This file contains macro definitions that are edited by the user to
      adapt the Events and Services framework to a particular application.
  Notes
-
- History
- When           Who     What/Why
- -------------- ---     --------
- 12/19/16 20:19  jec     removed EVENT_CHECK_HEADER definition. This goes with
-                         the V2.3 move to a single wrapper for event checking
-                         headers
-  10/11/15 18:00 jec     added new event type ES_SHORT_TIMEOUT
-  10/21/13 20:54 jec     lots of added entries to bring the number of timers
-                         and services up to 16 each
- 08/06/13 14:10 jec      removed PostKeyFunc stuff since we are moving that
-                         functionality out of the framework and putting it
-                         explicitly into the event checking functions
- 01/15/12 10:03 jec      started coding
-*****************************************************************************/
+*************************************/
 
 #ifndef ES_CONFIGURE_H
 #define ES_CONFIGURE_H
@@ -31,9 +17,13 @@
 #define MAX_NUM_SERVICES 16
 
 /****************************************************************************/
-// This macro determines that nuber of services that are *actually* used in
+// This macro determines that number of services that are *actually* used in
 // a particular application. It will vary in value from 1 to MAX_NUM_SERVICES
-#define NUM_SERVICES 1
+// Quackraft uses 3 services:
+//   Service 0 = TestHarnessService (for debugging)
+//   Service 1 = XBeeService        (comms + pairing FSM + steam accounting)
+//   Service 2 = ActuatorService    (motors + servos)
+#define NUM_SERVICES 3
 
 /****************************************************************************/
 // These are the definitions for Service 0, the lowest priority service.
@@ -57,26 +47,26 @@
 // These are the definitions for Service 1
 #if NUM_SERVICES > 1
 // the header file with the public function prototypes
-#define SERV_1_HEADER "TestHarnessService1.h"
+#define SERV_1_HEADER "XBeeService.h"
 // the name of the Init function
-#define SERV_1_INIT InitTestHarnessService1
+#define SERV_1_INIT InitXBeeService
 // the name of the run function
-#define SERV_1_RUN RunTestHarnessService1
+#define SERV_1_RUN RunXBeeService
 // How big should this services Queue be?
-#define SERV_1_QUEUE_SIZE 3
+#define SERV_1_QUEUE_SIZE 5
 #endif
 
 /****************************************************************************/
 // These are the definitions for Service 2
 #if NUM_SERVICES > 2
 // the header file with the public function prototypes
-#define SERV_2_HEADER "TestHarnessService2.h"
+#define SERV_2_HEADER "ActuatorService.h"
 // the name of the Init function
-#define SERV_2_INIT InitTestHarnessService2
+#define SERV_2_INIT InitActuatorService
 // the name of the run function
-#define SERV_2_RUN RunTestHarnessService2
+#define SERV_2_RUN RunActuatorService
 // How big should this services Queue be?
-#define SERV_2_QUEUE_SIZE 3
+#define SERV_2_QUEUE_SIZE 5
 #endif
 
 /****************************************************************************/
@@ -309,7 +299,7 @@ typedef enum
 // Unlike services, any combination of timers may be used and there is no
 // priority in servicing them
 #define TIMER_UNUSED ((pPostFunc)0)
-#define TIMER0_RESP_FUNC TIMER_UNUSED
+#define TIMER0_RESP_FUNC PostXBeeService   /* PAIRING_WATCHDOG_TIMER */
 #define TIMER1_RESP_FUNC TIMER_UNUSED
 #define TIMER2_RESP_FUNC TIMER_UNUSED
 #define TIMER3_RESP_FUNC TIMER_UNUSED

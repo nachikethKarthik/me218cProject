@@ -12,9 +12,9 @@
 
 // Public Function Prototypes
 
-bool InitTemplateService(uint8_t Priority);
+bool InitActuatorService(uint8_t Priority);
 bool        PostActuatorService(ES_Event_t ThisEvent);
-ES_Event_t RunTemplateService(ES_Event_t ThisEvent);
+ES_Event_t RunActuatorService(ES_Event_t ThisEvent);
 
 #endif /* ACTUATOR_SERVICE_H */
 

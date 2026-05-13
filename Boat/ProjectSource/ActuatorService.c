@@ -54,7 +54,7 @@ static uint8_t MyPriority;
  Author
      J. Edward Carryer, 01/16/12, 10:00
 ****************************************************************************/
-bool InitTemplateService(uint8_t Priority)
+bool InitActuatorService(uint8_t Priority)
 {
   ES_Event_t ThisEvent;
 
@@ -113,7 +113,7 @@ bool PostActuatorService(ES_Event_t ThisEvent)
  Author
    J. Edward Carryer, 01/15/12, 15:23
 ****************************************************************************/
-ES_Event_t RunTemplateService(ES_Event_t ThisEvent)
+ES_Event_t RunActuatorService(ES_Event_t ThisEvent)
 {
   ES_Event_t ReturnEvent;
   ReturnEvent.EventType = ES_NO_EVENT; // assume no errors
