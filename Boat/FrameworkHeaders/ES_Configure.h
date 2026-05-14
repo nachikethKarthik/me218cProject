@@ -66,7 +66,7 @@
 // the name of the run function
 #define SERV_2_RUN RunActuatorService
 // How big should this services Queue be?
-#define SERV_2_QUEUE_SIZE 5
+#define SERV_2_QUEUE_SIZE 20 // larger queue size as a safety because there will be a lot of events posted
 #endif
 
 /****************************************************************************/
