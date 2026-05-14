@@ -126,8 +126,22 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
             else if ('j' == ThisEvent.EventParam)
             {
                 //DB_printf("j pressed\n");
+                
                 X_Joystick = Read_X_Joystick();
                 Y_Joystick = Read_Y_Joystick();
+                uint8_t joy1 = Y_Joystick / 4;
+                uint8_t joy2 = X_Joystick / 4;
+                
+                if (joy1 == 126){
+                    joy1 == 127;
+                }
+                if (joy2 == 126){
+                    joy2 == 127;
+                }
+                
+                uint8_t digi = 0;
+                XBeeHAL_SendDriving(XBEE_QUACKRAFT_TEAM5_ADDR, joy1, joy2, digi);
+                
                 DB_printf("Value of Joystick is x = %d, y = %d\n", X_Joystick, Y_Joystick);
             }
         }
