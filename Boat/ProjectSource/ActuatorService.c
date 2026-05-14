@@ -55,7 +55,7 @@
 // A joystick byte of 0x00 yields -127 and 0xFF yields +128;
 #define THRUSTER_MAX_CMD    127
 
-// Digi byte bit positions (per class-wide protocol)
+// Digi byte bit positions (per class-wide protocol), these are bit masks
 #define DIGI_BIT_GATE       0x01    // bit 0 = critter collect / gate
 #define DIGI_BIT_SMACKER    0x02    // bit 1 = captain-duck smacker
  
@@ -211,6 +211,7 @@ ES_Event_t RunActuatorService(ES_Event_t ThisEvent)
       // EventParam packs joy1 in the high byte, joy2 in the low byte.
       uint8_t joy1 = (uint8_t)((ThisEvent.EventParam >> 8) & 0xFF);
       uint8_t joy2 = (uint8_t)(ThisEvent.EventParam & 0xFF);
+      DB_printf("\rreceived  ES_SET_THRUSTERS with joy1 = %d and joy2 = %d\r\n",joy1,joy2);
       SetThrusters(joy1, joy2);
       break;
     }
@@ -218,8 +219,11 @@ ES_Event_t RunActuatorService(ES_Event_t ThisEvent)
     case ES_SET_DIGI_OUT:
     {
       uint8_t digi = (uint8_t)(ThisEvent.EventParam & 0xFF);
+      // (digi & DIGI_BIT_GATE) produces a uint8_t which is then converted to bool using the != 0 
       SetGate((digi & DIGI_BIT_GATE) != 0);
       SetSmacker((digi & DIGI_BIT_SMACKER) != 0);
+      DB_printf("\rreceived  ES_SET_DIGI_OUT, controlling the gate and \r\n");
+      
       break;
     }
  
@@ -232,6 +236,7 @@ ES_Event_t RunActuatorService(ES_Event_t ThisEvent)
     case ES_SET_PAIR_IND:
     {
       SetPairIndicator(ThisEvent.EventParam != 0);
+      DB_printf("\rreceived  ES_SET_PAIR_IND, controlling the pairing indicator servo setting it to %d\r\n",ThisEvent.EventParam);
       break;
     }
  
