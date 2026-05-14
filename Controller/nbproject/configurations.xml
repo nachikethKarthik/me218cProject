@@ -47,6 +47,8 @@
       <itemPath>ProjectHeaders/ControllerService.h</itemPath>
       <itemPath>ProjectHeaders/Controller_Communication_HAL.h</itemPath>
       <itemPath>ProjectHeaders/UART_HAL.h</itemPath>
+      <itemPath>ProjectHeaders/PIC32_AD_Lib.h</itemPath>
+      <itemPath>ProjectHeaders/Joystick_HAL.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -61,6 +63,8 @@
       <itemPath>ProjectSource/ControllerService.c</itemPath>
       <itemPath>ProjectSource/Controller_Communication_HAL.c</itemPath>
       <itemPath>ProjectSource/UART_HAL.c</itemPath>
+      <itemPath>ProjectSource/PIC32_AD_Lib.c</itemPath>
+      <itemPath>ProjectSource/Joystick_HAL.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
