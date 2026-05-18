@@ -142,6 +142,22 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                 uint8_t digi = 0;
                 XBeeHAL_SendDriving(XBEE_QUACKRAFT_TEAM5_ADDR, joy1, joy2, digi);
                 
+                XBeeRxPacket_t rxPacket;
+                if (XBeeHAL_Update())
+                {
+                    if (XBeeHAL_GetLastRxPacket(&rxPacket))
+                    {
+                        uint8_t charge = rxPacket.charge;
+                        
+                        if (charge == 0xFF)
+                        {
+                            //Pairing success
+                        }else{
+                            DB_printf("Charge = %d\n", charge);
+                        }
+                    }
+                }
+                
                 DB_printf("Value of Joystick is x = %d, y = %d\n", X_Joystick, Y_Joystick);
             }
         }
