@@ -10,6 +10,8 @@
 #include "Controller_Communication_HAL.h"
 #include "UART_HAL.h"
 #include "Joystick_HAL.h"
+#include "Servo_HAL.h"
+#include "PairingDisplay_HAL.h"
 /*----------------------------- Module Defines ----------------------------*/
 
 /*---------------------------- Module Functions ---------------------------*/
@@ -34,6 +36,11 @@ bool InitControllerService(uint8_t Priority)
   
   XBeeHAL_Init();
   Init_Joystick();
+  Servo_Init();
+  Servo_SetAngle(0);
+  
+  SevenSeg_Init();
+  
   if (ES_PostToService(MyPriority, ThisEvent) == true)
   {
     return true;
@@ -44,45 +51,11 @@ bool InitControllerService(uint8_t Priority)
   }
 }
 
-/****************************************************************************
- Function
-     PostTemplateFSM
-
- Parameters
-     EF_Event_t ThisEvent , the event to post to the queue
-
- Returns
-     boolean False if the Enqueue operation failed, True otherwise
-
- Description
-     Posts an event to this state machine's queue
- Notes
-
- Author
-     J. Edward Carryer, 10/23/11, 19:25
-****************************************************************************/
 bool PostControllerService(ES_Event_t ThisEvent)
 {
   return ES_PostToService(MyPriority, ThisEvent);
 }
 
-/****************************************************************************
- Function
-    RunTemplateFSM
-
- Parameters
-   ES_Event_t : the event to process
-
- Returns
-   ES_Event_t, ES_NO_EVENT if no error ES_ERROR otherwise
-
- Description
-   add your description here
- Notes
-   uses nested switch/case to implement the machine.
- Author
-   J. Edward Carryer, 01/15/12, 15:23
-****************************************************************************/
 ES_Event_t RunControllerService(ES_Event_t ThisEvent)
 {
   ES_Event_t ReturnEvent;
@@ -160,6 +133,18 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                 
                 DB_printf("Value of Joystick is x = %d, y = %d\n", X_Joystick, Y_Joystick);
             }
+            else if ('d' == ThisEvent.EventParam){
+                
+                SevenSeg_DisplayDigit(3);
+
+                
+            }
+            else if ('s' == ThisEvent.EventParam){
+                
+                Servo_SetAngle(180);
+
+                
+            }
         }
         break;
 
@@ -174,23 +159,6 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
   return ReturnEvent;
 }
 
-/****************************************************************************
- Function
-     QueryTemplateSM
-
- Parameters
-     None
-
- Returns
-     TemplateState_t The current state of the Template state machine
-
- Description
-     returns the current state of the Template state machine
- Notes
-
- Author
-     J. Edward Carryer, 10/23/11, 19:21
-****************************************************************************/
 ControllerState_t QueryTemplateFSM(void)
 {
   return CurrentState;
