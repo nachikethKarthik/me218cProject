@@ -10,7 +10,11 @@
 #include "Controller_Communication_HAL.h"
 #include "UART_HAL.h"
 #include "Joystick_HAL.h"
+#include "Servo_HAL.h"
+#include "PairingDisplay_HAL.h"
 /*----------------------------- Module Defines ----------------------------*/
+#define XBEE_SEND_PERIOD_MS   200
+
 
 /*---------------------------- Module Functions ---------------------------*/
 
@@ -34,6 +38,13 @@ bool InitControllerService(uint8_t Priority)
   
   XBeeHAL_Init();
   Init_Joystick();
+  Servo_Init();
+  Servo_SetAngle(0);
+  
+  SevenSeg_Init();
+  
+  ES_Timer_InitTimer(XBEE_TIMER, XBEE_SEND_PERIOD_MS);
+  
   if (ES_PostToService(MyPriority, ThisEvent) == true)
   {
     return true;
@@ -44,45 +55,11 @@ bool InitControllerService(uint8_t Priority)
   }
 }
 
-/****************************************************************************
- Function
-     PostTemplateFSM
-
- Parameters
-     EF_Event_t ThisEvent , the event to post to the queue
-
- Returns
-     boolean False if the Enqueue operation failed, True otherwise
-
- Description
-     Posts an event to this state machine's queue
- Notes
-
- Author
-     J. Edward Carryer, 10/23/11, 19:25
-****************************************************************************/
 bool PostControllerService(ES_Event_t ThisEvent)
 {
   return ES_PostToService(MyPriority, ThisEvent);
 }
 
-/****************************************************************************
- Function
-    RunTemplateFSM
-
- Parameters
-   ES_Event_t : the event to process
-
- Returns
-   ES_Event_t, ES_NO_EVENT if no error ES_ERROR otherwise
-
- Description
-   add your description here
- Notes
-   uses nested switch/case to implement the machine.
- Author
-   J. Edward Carryer, 01/15/12, 15:23
-****************************************************************************/
 ES_Event_t RunControllerService(ES_Event_t ThisEvent)
 {
   ES_Event_t ReturnEvent;
@@ -151,7 +128,7 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                         
                         if (charge == 0xFF)
                         {
-                            //Pairing success
+                            DB_printf("Paired!!!!\n");
                         }else{
                             DB_printf("Charge = %d\n", charge);
                         }
@@ -160,37 +137,86 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                 
                 DB_printf("Value of Joystick is x = %d, y = %d\n", X_Joystick, Y_Joystick);
             }
+            else if ('d' == ThisEvent.EventParam){
+                
+                SevenSeg_DisplayDigit(3);
+
+                
+            }
+            else if ('s' == ThisEvent.EventParam){
+                
+                Servo_SetAngle(150);
+
+                
+            }
         }
         break;
-
+        case ES_TIMEOUT:
+        {
+            
+            if (XBEE_TIMER == ThisEvent.EventParam){
+                
+                ES_Timer_InitTimer(XBEE_TIMER, XBEE_SEND_PERIOD_MS);
+                
+                X_Joystick = Read_X_Joystick();
+                Y_Joystick = Read_Y_Joystick();
+                uint8_t joy1 = Y_Joystick / 4;
+                uint8_t joy2 = X_Joystick / 4;
+                
+                if (joy1 == 126){
+                    joy1 == 127;
+                }
+                if (joy2 == 126){
+                    joy2 == 127;
+                }
+                
+                uint8_t digi = 0;
+                XBeeHAL_SendDriving(XBEE_QUACKRAFT_TEAM5_ADDR, joy1, joy2, digi);
+                
+                //XBeeHAL_SendPairing(XBEE_QUACKRAFT_TEAM5_ADDR,  XBEE_MALLARD_TEAM5_ADDR);
+                
+                XBeeRxPacket_t rxPacket;
+                if (XBeeHAL_Update())
+                {
+                    if (XBeeHAL_GetLastRxPacket(&rxPacket))
+                    {
+                        uint8_t charge = rxPacket.charge;
+                        
+                        if (charge == 0xFF)
+                        {
+                            DB_printf("Paired!!!!\n");
+                        }else{
+                            DB_printf("Charge = %d\n", charge);
+                            Servo_SetAngle((uint8_t)charge);
+                            
+                            
+                        }
+                    }
+                }
+                
+                //DB_printf("Value of Joystick is x = %d, y = %d\n", X_Joystick, Y_Joystick);
+            }
+            
+            
+        }
+        
+        
+        
         default:
           ;
       }
     }
     break;
+    
+    
+    
+    
     default:
       ;
   }
   return ReturnEvent;
 }
 
-/****************************************************************************
- Function
-     QueryTemplateSM
-
- Parameters
-     None
-
- Returns
-     TemplateState_t The current state of the Template state machine
-
- Description
-     returns the current state of the Template state machine
- Notes
-
- Author
-     J. Edward Carryer, 10/23/11, 19:21
-****************************************************************************/
 ControllerState_t QueryTemplateFSM(void)
 {
   return CurrentState;
