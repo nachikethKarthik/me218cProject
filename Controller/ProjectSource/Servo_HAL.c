@@ -9,6 +9,14 @@
 
 void Servo_Init(void)
 {
+    TRISBbits.TRISB15 = 0;
+    
+    T3CONbits.ON = 0;
+    T3CONbits.TCKPS = 0b011;
+    TMR3 = 0;
+    PR3 = 49999;
+    T3CONbits.ON = 1;
+    
     // OC1 - RB15
     OC1CONbits.ON = 0;
     OC1R = 0;
@@ -30,7 +38,7 @@ void Servo_SetAngle(uint8_t angle)
 }
 
 
-void Servo_SetPalseWidth(uint16_t pw){
+void Servo_SetPulseWidth(uint16_t pw){
     
     if (pw < SERVO_MIN_TICKS) pw = SERVO_MIN_TICKS;
     if (pw > SERVO_MAX_TICKS) pw = SERVO_MAX_TICKS;
