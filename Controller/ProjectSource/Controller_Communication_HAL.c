@@ -6,6 +6,7 @@
 
 #define XBEE_START_DELIMITER    0x7E
 #define XBEE_API_ID_TX_16       0x01
+#define XBEE_API_ID_RX_16       0x81
 #define XBEE_FRAME_ID_DISABLED  0x00
 #define XBEE_OPTIONS_NO_ACK     0x01
 
@@ -217,19 +218,10 @@ static bool XBeeHAL_ParseCompleteRxFrame(const uint8_t *frame)
         return false;
     }
 
-    if (frame[3] != XBEE_API_ID_TX_16) {
+    if (frame[3] != XBEE_API_ID_RX_16) {
         return false;
     }
 
-    if (frame[4] != XBEE_FRAME_ID_DISABLED) {
-        return false;
-    }
-
-    if (frame[7] != XBEE_OPTIONS_NO_ACK) {
-        return false;
-    }
-
-    // verify checksum.
     uint16_t sum = 0;
     for (uint8_t i = 3; i <= 8; i++) {
         sum += frame[i];
@@ -241,7 +233,7 @@ static bool XBeeHAL_ParseCompleteRxFrame(const uint8_t *frame)
         return false;
     }
 
-    lastRxPacket.destinationAddress = ((uint16_t)frame[5] << 8) | frame[6];
+    lastRxPacket.destinationAddress = ((uint16_t)frame[4] << 8) | frame[5];
     lastRxPacket.charge = frame[8];
     lastRxPacket.valid = true;
 

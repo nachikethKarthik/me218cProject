@@ -625,27 +625,30 @@ static void HandleRxFrame(const uint8_t *frame, uint8_t frameLen)
 ****************************************************************************/
 static void SendResponse(uint8_t chargeByte)
 {
-  uint8_t frame[10];
-  frame[0] = XBEE_START_DELIM;
-  frame[1] = 0x00;
-  frame[2] = 0x06;
-  frame[3] = XBEE_API_TX16; // 0x01
-  frame[4] = 0x00;                  // frame ID = 0, no TX status wanted
-  frame[5] = PairedMM_AddrHi;
-  frame[6] = PairedMM_AddrLo;
-  frame[7] = 0x01;                  // disable ACK
-  frame[8] = chargeByte; // send 0xFF as the charge byte for pairing message responses alone
- 
-  // Checksum: sum of bytes [3..8] (API ID through last data byte), low 8
-  // bits subtracted from 0xFF.
-  uint8_t sum = 0;
-  for (uint8_t i = 3; i <= 8; i++)
-  {
-    sum += frame[i];
-  }
-  frame[9] = (uint8_t)(0xFF - sum);
- 
-  TransmitFrame(frame, sizeof(frame));
+    
+    uint8_t frame[10];
+    frame[0] = XBEE_START_DELIM;
+    frame[1] = 0x00;
+    frame[2] = 0x06;
+    frame[3] = XBEE_API_TX16; // 0x01
+    frame[4] = 0x00;                  // frame ID = 0, no TX status wanted
+    frame[5] = PairedMM_AddrHi;
+    frame[6] = PairedMM_AddrLo;
+    frame[7] = 0x01;                  // disable ACK
+    frame[8] = chargeByte; // send 0xFF as the charge byte for pairing message responses alone
+
+    // Checksum: sum of bytes [3..8] (API ID through last data byte), low 8
+    // bits subtracted from 0xFF.
+    uint8_t sum = 0;
+    for (uint8_t i = 3; i <= 8; i++)
+    {
+        sum += frame[i];
+    }
+    frame[9] = (uint8_t)(0xFF - sum);
+    
+    DB_printf("\rRemaining steam left = %d\r\n",Steam);
+    
+    TransmitFrame(frame, sizeof(frame));
 }
 
 /****************************************************************************
