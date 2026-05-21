@@ -21,7 +21,7 @@
 // State definitions for use with the query function
 typedef enum
 {
-  InitPState, TestState, _1UnlockPress,
+  InitPState, TestState, DrivingState, _1UnlockPress,
   _2UnlockPresses, Locked
 }ControllerState_t;
 

@@ -167,6 +167,73 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
           ;
       }
     }
+    
+    case DrivingState:
+    {
+        switch (ThisEvent.EventType)
+      {
+        case ES_NEW_KEY:
+        {
+            //DB_printf("1\n");
+            if('c' == ThisEvent.EventParam)
+            {
+                DB_printf("c pressed\n");
+                XBeeHAL_SendCharging(XBEE_QUACKRAFT_TEAM5_ADDR);
+            }
+            else if('i' == ThisEvent.EventParam)
+            {
+                DB_printf("i pressed\n");
+                XBeeHAL_SendIdle(XBEE_QUACKRAFT_TEAM5_ADDR);
+            }
+            else if ('p' == ThisEvent.EventParam)
+            {
+                DB_printf("p pressed\n");
+                XBeeHAL_SendPairing(XBEE_QUACKRAFT_TEAM5_ADDR,  XBEE_MALLARD_TEAM5_ADDR);
+            }
+            else if ('j' == ThisEvent.EventParam)
+            {
+                //DB_printf("j pressed\n");
+                
+                X_Joystick = Read_X_Joystick();
+                Y_Joystick = Read_Y_Joystick();
+                uint8_t joy1 = Y_Joystick / 4;
+                uint8_t joy2 = X_Joystick / 4;
+                
+                if (joy1 == 126){
+                    joy1 == 127;
+                }
+                if (joy2 == 126){
+                    joy2 == 127;
+                }
+                
+                uint8_t digi = 0;
+                XBeeHAL_SendDriving(XBEE_QUACKRAFT_TEAM5_ADDR, joy1, joy2, digi);
+                
+                XBeeRxPacket_t rxPacket;
+                if (XBeeHAL_Update())
+                {
+                    if (XBeeHAL_GetLastRxPacket(&rxPacket))
+                    {
+                        uint8_t charge = rxPacket.charge;
+                        
+                        if (charge == 0xFF)
+                        {
+                            //Pairing success
+                        }else{
+                            DB_printf("Charge = %d\n", charge);
+                        }
+                    }
+                }
+                
+                DB_printf("Value of Joystick is x = %d, y = %d\n", X_Joystick, Y_Joystick);
+            }
+        }
+        break;
+
+        default:
+          ;
+        }
+    }      
     break;
     default:
       ;
