@@ -397,10 +397,10 @@ static void SetThrusters(uint8_t joy1, uint8_t joy2)
   int16_t forward = (int16_t)joy1 - (int16_t)JOY_CENTER;
   int16_t turn    = (int16_t)joy2 - (int16_t)JOY_CENTER;
  
-  int16_t leftCmd  = forward + turn;
-  int16_t rightCmd = forward - turn;
+  int16_t leftCmd  = forward - turn;
+  int16_t rightCmd = forward + turn;
  
-  OC1RS = SignedCmdToPulseTicks(leftCmd);    // left thruster
+  OC1RS = SignedCmdToPulseTicks(-leftCmd);    // left thruster
   OC2RS = SignedCmdToPulseTicks(rightCmd);   // right thruster
 }
 
