@@ -12,9 +12,10 @@
 #include "Joystick_HAL.h"
 #include "Servo_HAL.h"
 #include "PairingDisplay_HAL.h"
+//#include "Potentiometer_HAL.h"  // Same in Joystick_HAL.h
 /*----------------------------- Module Defines ----------------------------*/
 #define XBEE_SEND_PERIOD_MS   200
-
+#define DISPLAY_PERIOD_MS     200
 
 /*---------------------------- Module Functions ---------------------------*/
 
@@ -27,6 +28,10 @@ static ControllerState_t CurrentState;
 static uint8_t MyPriority;
 static uint32_t X_Joystick;
 static uint32_t Y_Joystick;
+
+static uint32_t boatselect;
+
+static uint8_t boattarget;
 /*------------------------------ Module Code ------------------------------*/
 bool InitControllerService(uint8_t Priority)
 {
@@ -43,7 +48,8 @@ bool InitControllerService(uint8_t Priority)
   
   SevenSeg_Init();
   
-  ES_Timer_InitTimer(XBEE_TIMER, XBEE_SEND_PERIOD_MS);
+  //ES_Timer_InitTimer(XBEE_TIMER, XBEE_SEND_PERIOD_MS);
+  ES_Timer_InitTimer(DISPLAY_TIMER, DISPLAY_PERIOD_MS);
   
   if (ES_PostToService(MyPriority, ThisEvent) == true)
   {
@@ -73,6 +79,8 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
       {
 
         CurrentState = TestState;
+        
+        //CurrentState = PairingState;
       }
     }
     break;
@@ -146,8 +154,11 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
             else if ('s' == ThisEvent.EventParam){
                 
                 Servo_SetAngle(150);
-
-                
+            }
+            else if ('b' == ThisEvent.EventParam){
+                uint32_t boatselect = Read_Potentiometer();
+                SevenSeg_DisplayDigit(boatselect);
+                DB_printf("boat select is %d\n",boatselect);
             }
         }
         break;
@@ -226,10 +237,49 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
     {
         switch (ThisEvent.EventType)
         {
+            case ES_PAIRINGBUTTON:
+            {
+                DB_printf("Pairing Button Pressed!\n"); 
+                boatselect = Read_Potentiometer();
+                SevenSeg_DisplayDigit(boatselect);
+                
+                switch (boatselect)
+                {
+                    case 1:
+                        boattarget = 1;
+                        ES_Timer_InitTimer(XBEE_TIMER, XBEE_SEND_PERIOD_MS);
+                    break;
+                    case 2:
+                        boattarget = 2;
+                        ES_Timer_InitTimer(XBEE_TIMER, XBEE_SEND_PERIOD_MS);
+                    break;
+                    case 3:
+                        boattarget = 3;
+                        ES_Timer_InitTimer(XBEE_TIMER, XBEE_SEND_PERIOD_MS);
+                    break;
+                    case 4:
+                        boattarget = 4;
+                        ES_Timer_InitTimer(XBEE_TIMER, XBEE_SEND_PERIOD_MS);
+                    break;
+                    case 5:
+                        boattarget = 5;
+                        ES_Timer_InitTimer(XBEE_TIMER, XBEE_SEND_PERIOD_MS);
+                    break;
+                    case 0:
+                        //boattarget = 0;
+                    break;
+                    default:
+                        ;
+                }
+            }
+            break;
+            
             case ES_TIMEOUT:
             {         
-                XBeeHAL_SendPairing(XBEE_QUACKRAFT_TEAM5_ADDR,  XBEE_MALLARD_TEAM5_ADDR);
+                //XBeeHAL_SendPairing(XBEE_QUACKRAFT_TEAM5_ADDR,  XBEE_MALLARD_TEAM5_ADDR);
                 if (XBEE_TIMER == ThisEvent.EventParam){
+                    ES_Timer_InitTimer(XBEE_TIMER, XBEE_SEND_PERIOD_MS);
+                    XBeeHAL_SendPairing(XBEE_QUACKRAFT_TEAM5_ADDR,  XBEE_MALLARD_TEAM5_ADDR);
                     XBeeRxPacket_t rxPacket;
                     if (XBeeHAL_Update())
                     {
@@ -239,10 +289,15 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                             if (charge == 0xFF)
                             {
                                 DB_printf("Paired!!!!\n");
+                                // TODO: Turn on LED 
                                 CurrentState = DrivingState;
                             }
                         }
                     }
+                } else if (DISPLAY_TIMER == ThisEvent.EventParam){
+                    boatselect = Read_Potentiometer();
+                    SevenSeg_DisplayDigit(boatselect);
+                    ES_Timer_InitTimer(DISPLAY_TIMER, DISPLAY_PERIOD_MS);
                 }
             }
             break;

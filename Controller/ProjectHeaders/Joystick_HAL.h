@@ -6,4 +6,5 @@
 bool Init_Joystick(void);
 uint32_t Read_X_Joystick(void);
 uint32_t Read_Y_Joystick(void);
+uint32_t Read_Potentiometer(void);
 #endif

@@ -309,7 +309,7 @@ typedef enum
 // priority in servicing them
 #define TIMER_UNUSED ((pPostFunc)0)
 #define TIMER0_RESP_FUNC PostControllerService
-#define TIMER1_RESP_FUNC TIMER_UNUSED
+#define TIMER1_RESP_FUNC PostControllerService
 #define TIMER2_RESP_FUNC TIMER_UNUSED
 #define TIMER3_RESP_FUNC TIMER_UNUSED
 #define TIMER4_RESP_FUNC TIMER_UNUSED
@@ -334,5 +334,6 @@ typedef enum
 
 #define SERVICE0_TIMER 15
 #define XBEE_TIMER     0
+#define DISPLAY_TIMER  1
 
 #endif /* ES_CONFIGURE_H */
