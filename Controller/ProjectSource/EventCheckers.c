@@ -106,6 +106,14 @@ bool Check4Lock(void)
  Author
    J. Edward Carryer, 08/06/13, 13:48
 ****************************************************************************/
+
+#define PAIRINGBUTTON PORTAbits.RA4
+#define REFUELSWITCH PORTBbits.RB9
+
+static bool is_pairingbutton_pressed = false;
+static bool is_drive_mode = true;
+
+
 bool Check4Keystroke(void)
 {
   if (IsNewKeyReady())   // new key waiting?
@@ -119,3 +127,42 @@ bool Check4Keystroke(void)
   return false;
 }
 
+bool CheckPairingButton(void){
+    static uint8_t LastButtonState = 1;
+    uint8_t CurrentButtonState = PAIRINGBUTTON;
+    
+    if(LastButtonState != CurrentButtonState && CurrentButtonState == 0 && is_pairingbutton_pressed == false){
+        //LastButtonState = CurrentButtonState;
+        is_pairingbutton_pressed = true;
+        ES_Event_t ThisEvent;
+        ThisEvent.EventType   = ES_PAIRINGBUTTON;
+        ES_PostAll(ThisEvent);
+        return true;
+    } else if (LastButtonState != CurrentButtonState && CurrentButtonState == 1 && is_pairingbutton_pressed == true){
+        is_pairingbutton_pressed = false;
+    }
+    LastButtonState = CurrentButtonState;
+    return false;
+}
+
+
+bool CheckRefuelSwitch(void){
+    static uint8_t LastSwitchState = 1;
+    uint8_t CurrentSwitchState = REFUELSWITCH;
+    
+    if(LastSwitchState != CurrentSwitchState && CurrentSwitchState == 0 && is_drive_mode == false){
+        is_drive_mode = true;
+        ES_Event_t ThisEvent;
+        ThisEvent.EventType   = ES_TODRIVE;
+        ES_PostAll(ThisEvent);
+        return true;
+    } else if (LastSwitchState != CurrentSwitchState && CurrentSwitchState == 1 && is_drive_mode == true){
+        is_drive_mode = false;
+        ES_Event_t ThisEvent;
+        ThisEvent.EventType   = ES_TOREFUEL;
+        ES_PostAll(ThisEvent);
+        return true;
+    }
+    LastSwitchState = CurrentSwitchState;
+    return false;
+}
