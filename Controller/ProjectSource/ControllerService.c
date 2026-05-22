@@ -310,10 +310,15 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
     {
         switch (ThisEvent.EventType)
         {
+            case ES_TOREFUEL:
+            {
+                CurrentState = ChargingState;
+            }
+            break;
+            
             case ES_TIMEOUT:
             { 
                 if (XBEE_TIMER == ThisEvent.EventParam){
-
                     ES_Timer_InitTimer(XBEE_TIMER, XBEE_SEND_PERIOD_MS);
 
                     X_Joystick = Read_X_Joystick();
@@ -328,10 +333,8 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                         joy2 == 127;
                     }
 
-                    uint8_t digi = 0;
+                    uint8_t digi = 0; // TODO: Add button event
                     XBeeHAL_SendDriving(XBEE_QUACKRAFT_TEAM5_ADDR, joy1, joy2, digi);
-
-                    //XBeeHAL_SendPairing(XBEE_QUACKRAFT_TEAM5_ADDR,  XBEE_MALLARD_TEAM5_ADDR);
 
                     XBeeRxPacket_t rxPacket;
                     if (XBeeHAL_Update())
@@ -346,8 +349,6 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                             }else{
                                 DB_printf("Charge = %d\n", charge);
                                 Servo_SetAngle((uint8_t)charge);
-
-
                             }
                         }
                     }
@@ -368,10 +369,16 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
     {
         switch (ThisEvent.EventType)
         {
-        //XBeeHAL_SendCharging(XBEE_QUACKRAFT_TEAM5_ADDR,  XBEE_MALLARD_TEAM5_ADDR);
+            case ES_TODRIVE:
+            {
+                CurrentState = DrivingState;
+            }
+            break;
             case ES_TIMEOUT:
             {         
                 if (XBEE_TIMER == ThisEvent.EventParam){
+                    XBeeHAL_SendCharging(XBEE_QUACKRAFT_TEAM5_ADDR,  XBEE_MALLARD_TEAM5_ADDR); // TODO: add IMU event
+                    ES_Timer_InitTimer(XBEE_TIMER, XBEE_SEND_PERIOD_MS);
                     XBeeRxPacket_t rxPacket;
                     if (XBeeHAL_Update())
                     {
