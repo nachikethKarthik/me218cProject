@@ -12,6 +12,7 @@
 #include "Joystick_HAL.h"
 #include "Servo_HAL.h"
 #include "PairingDisplay_HAL.h"
+#include "ADXL345_HAL.h"
 //#include "Potentiometer_HAL.h"  // Same in Joystick_HAL.h
 /*----------------------------- Module Defines ----------------------------*/
 #define XBEE_SEND_PERIOD_MS   200
@@ -85,6 +86,7 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
     }
     break;
 
+/*----------------------------- TestState ----------------------------*/
     case TestState:
     {
       //DB_printf("TestState!\n");
@@ -233,6 +235,9 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
       }
     }
     break;
+    
+    
+/*----------------------------- PairingState ----------------------------*/
     case PairingState:
     {
         switch (ThisEvent.EventType)
@@ -266,7 +271,7 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                         ES_Timer_InitTimer(XBEE_TIMER, XBEE_SEND_PERIOD_MS);
                     break;
                     case 0:
-                        //boattarget = 0;
+                        boattarget = 0;
                     break;
                     default:
                         ;
@@ -276,10 +281,33 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
             
             case ES_TIMEOUT:
             {         
-                //XBeeHAL_SendPairing(XBEE_QUACKRAFT_TEAM5_ADDR,  XBEE_MALLARD_TEAM5_ADDR);
                 if (XBEE_TIMER == ThisEvent.EventParam){
                     ES_Timer_InitTimer(XBEE_TIMER, XBEE_SEND_PERIOD_MS);
-                    XBeeHAL_SendPairing(XBEE_QUACKRAFT_TEAM5_ADDR,  XBEE_MALLARD_TEAM5_ADDR);
+
+                    switch (boattarget)
+                    {
+                        case 1:
+                            XBeeHAL_SendPairing(XBEE_QUACKRAFT_TEAM1_ADDR, XBEE_MALLARD_TEAM5_ADDR);
+                        break;
+                        case 2:
+                            XBeeHAL_SendPairing(XBEE_QUACKRAFT_TEAM2_ADDR, XBEE_MALLARD_TEAM5_ADDR);
+                        break;
+                        case 3:
+                            XBeeHAL_SendPairing(XBEE_QUACKRAFT_TEAM3_ADDR, XBEE_MALLARD_TEAM5_ADDR);
+                        break;
+                        case 4:
+                            XBeeHAL_SendPairing(XBEE_QUACKRAFT_TEAM4_ADDR, XBEE_MALLARD_TEAM5_ADDR);
+                        break;
+                        case 5:
+                            XBeeHAL_SendPairing(XBEE_QUACKRAFT_TEAM5_ADDR, XBEE_MALLARD_TEAM5_ADDR);
+                        break;
+                        case 0:
+                            //boattarget = 0;
+                        break;
+                        default:
+                            ;
+                    }
+
                     XBeeRxPacket_t rxPacket;
                     if (XBeeHAL_Update())
                     {
@@ -306,6 +334,8 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
         }
     }   
     break;
+    
+/*----------------------------- DrivingState ----------------------------*/
     case DrivingState:
     {
         switch (ThisEvent.EventType)
@@ -364,7 +394,8 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
         }
     }      
     break;
-    
+
+/*----------------------------- ChargingState ----------------------------*/    
     case ChargingState:
     {
         switch (ThisEvent.EventType)
@@ -377,7 +408,31 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
             case ES_TIMEOUT:
             {         
                 if (XBEE_TIMER == ThisEvent.EventParam){
-                    XBeeHAL_SendCharging(XBEE_QUACKRAFT_TEAM5_ADDR,  XBEE_MALLARD_TEAM5_ADDR); // TODO: add IMU event
+                    
+                    switch (boattarget)
+                    {
+                        case 1:
+                            XBeeHAL_SendCharging(XBEE_QUACKRAFT_TEAM1_ADDR);
+                        break;
+                        case 2:
+                            XBeeHAL_SendCharging(XBEE_QUACKRAFT_TEAM2_ADDR);
+                        break;
+                        case 3:
+                            XBeeHAL_SendCharging(XBEE_QUACKRAFT_TEAM3_ADDR);
+                        break;
+                        case 4:
+                            XBeeHAL_SendCharging(XBEE_QUACKRAFT_TEAM4_ADDR);
+                        break;
+                        case 5:
+                            XBeeHAL_SendCharging(XBEE_QUACKRAFT_TEAM5_ADDR);
+                        break;
+                        case 0:
+                            //boattarget = 0;
+                        break;
+                        default:
+                            ;
+                    }
+                     // TODO: add IMU event
                     ES_Timer_InitTimer(XBEE_TIMER, XBEE_SEND_PERIOD_MS);
                     XBeeRxPacket_t rxPacket;
                     if (XBeeHAL_Update())
