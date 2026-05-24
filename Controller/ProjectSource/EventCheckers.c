@@ -39,6 +39,8 @@
 // include our own prototypes to insure consistency between header &
 // actual functionsdefinition
 #include "EventCheckers.h"
+#include "ControllerService.h"
+
 
 // This is the event checking function sample. It is not intended to be
 // included in the module. It is only here as a sample to guide you in writing
@@ -109,6 +111,7 @@ bool Check4Lock(void)
 
 #define PAIRINGBUTTON PORTAbits.RA4
 #define REFUELSWITCH PORTBbits.RB9
+#define GATEBUTTON PORTBbits.RB4
 
 static bool is_pairingbutton_pressed = false;
 static bool is_drive_mode = true;
@@ -164,5 +167,41 @@ bool CheckRefuelSwitch(void){
         return true;
     }
     LastSwitchState = CurrentSwitchState;
+    return false;
+}
+
+
+bool CheckGateButton(void)
+{
+    static uint8_t LastButtonState = 1;
+    uint8_t CurrentButtonState = GATEBUTTON;
+
+    if (GateControl == true) {
+        return false;
+    }
+
+    if (LastButtonState != CurrentButtonState) {
+
+        GateControl = true;
+        ES_Timer_InitTimer(GATECONTROL_TIMER, 30);
+
+        ES_Event_t ThisEvent;
+
+        if (CurrentButtonState == 0) { // Press
+            ThisEvent.EventType = ES_GATEBUTTON_PRESS;
+            ES_PostAll(ThisEvent);
+
+            LastButtonState = CurrentButtonState;
+            return true;
+
+        } else { // Release
+                ThisEvent.EventType = ES_GATEBUTTON_RELEASE;
+                ES_PostAll(ThisEvent);
+
+                LastButtonState = CurrentButtonState;
+                return true;
+        }
+    }
+
     return false;
 }

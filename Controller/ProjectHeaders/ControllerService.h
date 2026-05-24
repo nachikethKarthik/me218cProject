@@ -19,6 +19,9 @@
 #include "ES_Port.h" 
 // typedefs for the states
 // State definitions for use with the query function
+extern uint8_t ButtonValue;
+extern bool GateControl;
+
 typedef enum
 {
   InitPState, TestState, PairingState, ChargingState, DrivingState, _1UnlockPress,

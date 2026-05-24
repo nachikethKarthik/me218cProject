@@ -24,4 +24,5 @@
 bool Check4Keystroke(void);
 bool CheckPairingButton(void);
 bool CheckRefuelSwitch(void);
+bool CheckGateButton(void);
 #endif /* EventCheckers_H */
