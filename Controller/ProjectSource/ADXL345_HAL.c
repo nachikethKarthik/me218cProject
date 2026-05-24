@@ -73,29 +73,8 @@ bool ADXL345_Init(void)
         return false;
     }
 
-    /*
-     * BW_RATE register:
-     * 0x0A = 100 Hz output data rate.
-     */
     ADXL345_WriteReg(ADXL345_REG_BW_RATE, 0x0A);
-
-    /*
-     * DATA_FORMAT register:
-     *
-     * bit 3 FULL_RES = 1
-     * bit 1:0 Range = 00, +/- 2g
-     *
-     * 0x08 = FULL_RES enabled, +/- 2g range.
-     */
     ADXL345_WriteReg(ADXL345_REG_DATA_FORMAT, 0x08);
-
-    /*
-     * POWER_CTL register:
-     *
-     * bit 3 Measure = 1
-     *
-     * 0x08 = measurement mode.
-     */
     ADXL345_WriteReg(ADXL345_REG_POWER_CTL, 0x08);
 
     return true;
@@ -258,7 +237,7 @@ static void ADXL345_SPI1_Init(void)
      * If your chip uses different PPS codes, check the datasheet.
      */
     RPB5Rbits.RPB5R = 0b0011;   // RB5 = SDO1
-    SDI1Rbits.SDI1R = 0b0011;   // SDI1 = RB8
+    SDI1Rbits.SDI1R = 0b0100;   // SDI1 = RB8
 
     /*
      * Lock PPS.
@@ -283,31 +262,7 @@ static void ADXL345_SPI1_Init(void)
      */
     SPI1STATbits.SPIROV = 0;
 
-    /*
-     * SPI clock:
-     *
-     * Fsck = PBCLK / (2 * (SPI1BRG + 1))
-     *
-     * If PBCLK = 20 MHz:
-     * SPI1BRG = 99 gives 100 kHz.
-     *
-     * Start slow for debugging.
-     * After it works, you can reduce SPI1BRG to increase speed.
-     */
     SPI1BRG = 99;
-
-    /*
-     * SPI mode configuration.
-     *
-     * ADXL345 works with SPI mode 3:
-     *
-     * CPOL = 1
-     * CPHA = 1
-     *
-     * On PIC32:
-     * CKP = 1
-     * CKE = 0
-     */
     SPI1CONbits.MSTEN = 1;      // Master mode
     SPI1CONbits.MODE16 = 0;     // 8-bit mode
     SPI1CONbits.MODE32 = 0;     // 8-bit mode
@@ -332,16 +287,10 @@ static uint8_t ADXL345_SPI1_Transfer(uint8_t data)
 {
     SPI1BUF = data;
 
-    /*
-     * Wait until transfer is complete.
-     */
-    while (SPI1STATbits.SPIBUSY) {
+    while (!SPI1STATbits.SPIRBF) {
         ;
     }
 
-    /*
-     * Reading SPI1BUF gives the received byte.
-     */
     return (uint8_t)SPI1BUF;
 }
 
@@ -353,4 +302,33 @@ static void ADXL345_CS_Low(void)
 static void ADXL345_CS_High(void)
 {
     ADXL345_CS_LAT = 1;
+}
+
+
+uint8_t ADXL345_TestReadID(void)
+{
+    uint8_t id;
+
+    ADXL345_CS_High();
+
+    for (volatile uint32_t i = 0; i < 1000; i++) {
+        ;
+    }
+
+    ADXL345_CS_Low();
+
+    for (volatile uint32_t i = 0; i < 1000; i++) {
+        ;
+    }
+
+    ADXL345_SPI1_Transfer(0x80);
+    id = ADXL345_SPI1_Transfer(0x00);
+
+    for (volatile uint32_t i = 0; i < 1000; i++) {
+        ;
+    }
+
+    ADXL345_CS_High();
+
+    return id;
 }

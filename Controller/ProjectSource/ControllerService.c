@@ -18,6 +18,12 @@
 #define XBEE_SEND_PERIOD_MS   200
 #define DISPLAY_PERIOD_MS     200
 
+#define UPPER_X      40
+#define LOWER_X      -40
+#define UPPER_Y      40
+#define LOWER_Y      -40
+#define UPPER_Z      300
+#define LOWER_Z      200
 /*---------------------------- Module Functions ---------------------------*/
 
 
@@ -33,6 +39,13 @@ static uint32_t Y_Joystick;
 static uint32_t boatselect;
 
 static uint8_t boattarget;
+
+static uint8_t gatevalue;
+static bool gatestate = false;
+
+static ADXL345_RawData_t raw;
+
+bool GateControl = false;
 /*------------------------------ Module Code ------------------------------*/
 bool InitControllerService(uint8_t Priority)
 {
@@ -48,6 +61,21 @@ bool InitControllerService(uint8_t Priority)
   Servo_SetAngle(0);
   
   SevenSeg_Init();
+  
+  bool ok = ADXL345_Init();
+  if (ok){
+      DB_printf("IMU OK\n");
+  }
+  
+//  uint8_t id;
+//
+//  ADXL345_Init();
+//
+//  id = ADXL345_TestReadID();
+//
+//  DB_printf("ADXL ID = %d\r\n", id);
+  
+  
   
   //ES_Timer_InitTimer(XBEE_TIMER, XBEE_SEND_PERIOD_MS);
   ES_Timer_InitTimer(DISPLAY_TIMER, DISPLAY_PERIOD_MS);
@@ -74,7 +102,8 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
 
   switch (CurrentState)
   {
-    case InitPState:
+/*----------------------------- InitState ----------------------------*/
+      case InitPState:
     {
       if (ThisEvent.EventType == ES_INIT)
       {
@@ -127,6 +156,12 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                 }
                 
                 uint8_t digi = 0;
+                if (gatestate == true){
+                    digi += 0x01;
+                }else{
+                    // None
+                }
+                
                 XBeeHAL_SendDriving(XBEE_QUACKRAFT_TEAM5_ADDR, joy1, joy2, digi);
                 
                 XBeeRxPacket_t rxPacket;
@@ -161,6 +196,10 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                 uint32_t boatselect = Read_Potentiometer();
                 SevenSeg_DisplayDigit(boatselect);
                 DB_printf("boat select is %d\n",boatselect);
+            }
+            else if ('r' == ThisEvent.EventParam){
+                ADXL345_ReadRaw(&raw);
+                DB_printf("Raw data is x = %d, y = %d, z = %d\n", raw.x, raw.y, raw.z);
             }
         }
         break;
@@ -207,7 +246,8 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                     }
                 }
                 
-                //DB_printf("Value of Joystick is x = %d, y = %d\n", X_Joystick, Y_Joystick);
+            } else if (GATECONTROL_TIMER == ThisEvent.EventParam){
+                GateControl = false;
             }
         }
         break;
@@ -229,7 +269,22 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
         }
         break;
         
+        case ES_GATEBUTTON_PRESS:
+        {
+            DB_printf("Gate Button Pressed!\n"); 
+            if (gatestate == true){
+                gatestate = false;
+            }else{
+                gatestate = true;
+            }
+        }
+        break;
         
+        case ES_GATEBUTTON_RELEASE:
+        {
+            DB_printf("Gate Button Released!\n"); 
+        }
+        break;
         default:
           ;
       }
@@ -346,6 +401,15 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
             }
             break;
             
+            case ES_GATEBUTTON_PRESS:
+            {
+                if (gatestate == true){
+                    gatestate = false;
+                }else{
+                    gatestate = true;
+                }
+            }
+            
             case ES_TIMEOUT:
             { 
                 if (XBEE_TIMER == ThisEvent.EventParam){
@@ -363,7 +427,13 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                         joy2 == 127;
                     }
 
-                    uint8_t digi = 0; // TODO: Add button event
+                    uint8_t digi = 0;
+                    if (gatestate == true){
+                        digi += 0x01;
+                    }else{
+                        // None
+                    }
+                    
                     XBeeHAL_SendDriving(XBEE_QUACKRAFT_TEAM5_ADDR, joy1, joy2, digi);
 
                     XBeeRxPacket_t rxPacket;
@@ -384,8 +454,9 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                     }
 
                     //DB_printf("Value of Joystick is x = %d, y = %d\n", X_Joystick, Y_Joystick);
+                }else if(GATECONTROL_TIMER == ThisEvent.EventParam){
+                    GateControl = false;
                 }
- 
         }
         break;
 
@@ -409,30 +480,57 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
             {         
                 if (XBEE_TIMER == ThisEvent.EventParam){
                     
-                    switch (boattarget)
-                    {
-                        case 1:
-                            XBeeHAL_SendCharging(XBEE_QUACKRAFT_TEAM1_ADDR);
-                        break;
-                        case 2:
-                            XBeeHAL_SendCharging(XBEE_QUACKRAFT_TEAM2_ADDR);
-                        break;
-                        case 3:
-                            XBeeHAL_SendCharging(XBEE_QUACKRAFT_TEAM3_ADDR);
-                        break;
-                        case 4:
-                            XBeeHAL_SendCharging(XBEE_QUACKRAFT_TEAM4_ADDR);
-                        break;
-                        case 5:
-                            XBeeHAL_SendCharging(XBEE_QUACKRAFT_TEAM5_ADDR);
-                        break;
-                        case 0:
-                            //boattarget = 0;
-                        break;
-                        default:
-                            ;
-                    }
-                     // TODO: add IMU event
+                    ADXL345_ReadRaw(&raw);
+                        if (raw.x >= UPPER_X || raw.x <= LOWER_X || raw.y >= UPPER_Y || raw.y <= LOWER_Y || raw.z >= UPPER_Z || raw.z <= LOWER_Z)
+                        {
+                            switch (boattarget)
+                            {
+                                case 1:
+                                    XBeeHAL_SendCharging(XBEE_QUACKRAFT_TEAM1_ADDR);
+                                break;
+                                case 2:
+                                    XBeeHAL_SendCharging(XBEE_QUACKRAFT_TEAM2_ADDR);
+                                break;
+                                case 3:
+                                    XBeeHAL_SendCharging(XBEE_QUACKRAFT_TEAM3_ADDR);
+                                break;
+                                case 4:
+                                    XBeeHAL_SendCharging(XBEE_QUACKRAFT_TEAM4_ADDR);
+                                break;
+                                case 5:
+                                    XBeeHAL_SendCharging(XBEE_QUACKRAFT_TEAM5_ADDR);
+                                break;
+                                case 0:
+                                    //boattarget = 0;
+                                break;
+                                default:
+                                    ;
+                            }
+                        }else{
+                            switch (boattarget)
+                            {
+                                case 1:
+                                    XBeeHAL_SendIdle(XBEE_QUACKRAFT_TEAM1_ADDR);
+                                break;
+                                case 2:
+                                    XBeeHAL_SendIdle(XBEE_QUACKRAFT_TEAM2_ADDR);
+                                break;
+                                case 3:
+                                    XBeeHAL_SendIdle(XBEE_QUACKRAFT_TEAM3_ADDR);
+                                break;
+                                case 4:
+                                    XBeeHAL_SendIdle(XBEE_QUACKRAFT_TEAM4_ADDR);
+                                break;
+                                case 5:
+                                    XBeeHAL_SendIdle(XBEE_QUACKRAFT_TEAM5_ADDR);
+                                break;
+                                case 0:
+                                    //boattarget = 0;
+                                break;
+                                default:
+                                    ;
+                            }
+                        }
                     ES_Timer_InitTimer(XBEE_TIMER, XBEE_SEND_PERIOD_MS);
                     XBeeRxPacket_t rxPacket;
                     if (XBeeHAL_Update())
@@ -442,8 +540,10 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                             uint8_t charge = rxPacket.charge;
                             if (charge == 0xFF)
                             {
-                                DB_printf("Paired!!!!\n");
-                                CurrentState = DrivingState;
+                                // None
+                            }else{
+                                DB_printf("Charge = %d\n", charge);
+                                Servo_SetAngle((uint8_t)charge);
                             }
                         }
                     }

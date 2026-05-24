@@ -264,7 +264,9 @@ typedef enum
   ES_UNLOCK,
   ES_PAIRINGBUTTON,
   ES_TOREFUEL,
-  ES_TODRIVE
+  ES_TODRIVE,
+  ES_GATEBUTTON_PRESS,
+  ES_GATEBUTTON_RELEASE
 }ES_EventType_t;
 
 /****************************************************************************/
@@ -299,7 +301,7 @@ typedef enum
 
 /****************************************************************************/
 // This is the list of event checking functions
-#define EVENT_CHECK_LIST Check4Keystroke, CheckPairingButton, CheckRefuelSwitch
+#define EVENT_CHECK_LIST Check4Keystroke, CheckPairingButton, CheckRefuelSwitch, CheckGateButton
 
 /****************************************************************************/
 // These are the definitions for the post functions to be executed when the
@@ -310,7 +312,7 @@ typedef enum
 #define TIMER_UNUSED ((pPostFunc)0)
 #define TIMER0_RESP_FUNC PostControllerService
 #define TIMER1_RESP_FUNC PostControllerService
-#define TIMER2_RESP_FUNC TIMER_UNUSED
+#define TIMER2_RESP_FUNC PostControllerService
 #define TIMER3_RESP_FUNC TIMER_UNUSED
 #define TIMER4_RESP_FUNC TIMER_UNUSED
 #define TIMER5_RESP_FUNC TIMER_UNUSED
@@ -335,5 +337,7 @@ typedef enum
 #define SERVICE0_TIMER 15
 #define XBEE_TIMER     0
 #define DISPLAY_TIMER  1
+#define GATECONTROL_TIMER  2
+
 
 #endif /* ES_CONFIGURE_H */
