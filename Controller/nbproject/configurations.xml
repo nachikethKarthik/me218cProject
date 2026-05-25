@@ -53,6 +53,7 @@
       <itemPath>ProjectHeaders/PairingDisplay_HAL.h</itemPath>
       <itemPath>ProjectHeaders/Potentiometer_HAL.h</itemPath>
       <itemPath>ProjectHeaders/ADXL345_HAL.h</itemPath>
+      <itemPath>ProjectHeaders/RGB_HAL.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -73,6 +74,7 @@
       <itemPath>ProjectSource/PairingDisplay_HAL.c</itemPath>
       <itemPath>ProjectSource/Potentiometer_HAL.c</itemPath>
       <itemPath>ProjectSource/ADXL345_HAL.c</itemPath>
+      <itemPath>ProjectSource/RGB_HAL.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

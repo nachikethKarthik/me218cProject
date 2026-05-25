@@ -13,10 +13,12 @@
 #include "Servo_HAL.h"
 #include "PairingDisplay_HAL.h"
 #include "ADXL345_HAL.h"
+#include "RGB_HAL.h"
 //#include "Potentiometer_HAL.h"  // Same in Joystick_HAL.h
 /*----------------------------- Module Defines ----------------------------*/
-#define XBEE_SEND_PERIOD_MS   200
-#define DISPLAY_PERIOD_MS     200
+#define XBEE_SEND_PERIOD_MS     200
+#define DISPLAY_PERIOD_MS       200
+#define DOUBLECLICK_PERIOD_MS   500
 
 #define UPPER_X      40
 #define LOWER_X      -40
@@ -42,8 +44,13 @@ static uint8_t boattarget;
 
 static uint8_t gatevalue;
 static bool gatestate = false;
+static bool stickstate = false;
+
 
 static ADXL345_RawData_t raw;
+
+static bool doubleclick_control = false; 
+static bool doubletimer_control = false;
 
 bool GateControl = false;
 /*------------------------------ Module Code ------------------------------*/
@@ -52,12 +59,14 @@ bool InitControllerService(uint8_t Priority)
   ES_Event_t ThisEvent;
   DB_printf("Controller Service Start!\n");
   MyPriority = Priority;
-  CurrentState = TestState;
+  CurrentState = InitPState;
   ThisEvent.EventType = ES_INIT;
   
   XBeeHAL_Init();
   Init_Joystick();
   Servo_Init();
+  RGB_Init();
+  
   Servo_SetAngle(0);
   
   SevenSeg_Init();
@@ -78,7 +87,6 @@ bool InitControllerService(uint8_t Priority)
   
   
   //ES_Timer_InitTimer(XBEE_TIMER, XBEE_SEND_PERIOD_MS);
-  ES_Timer_InitTimer(DISPLAY_TIMER, DISPLAY_PERIOD_MS);
   
   if (ES_PostToService(MyPriority, ThisEvent) == true)
   {
@@ -108,9 +116,10 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
       if (ThisEvent.EventType == ES_INIT)
       {
 
-        CurrentState = TestState;
+        //CurrentState = TestState;
         
-        //CurrentState = PairingState;
+        CurrentState = PairingState;
+        ES_Timer_InitTimer(DISPLAY_TIMER, DISPLAY_PERIOD_MS);
       }
     }
     break;
@@ -118,7 +127,7 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
 /*----------------------------- TestState ----------------------------*/
     case TestState:
     {
-      //DB_printf("TestState!\n");
+      DB_printf("TestState!\n");
       switch (ThisEvent.EventType)
       {
         case ES_NEW_KEY:
@@ -239,7 +248,7 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                             DB_printf("Paired!!!!\n");
                         }else{
                             DB_printf("Charge = %d\n", charge);
-                            Servo_SetAngle((uint8_t)charge);
+                            Servo_SetAngle(150 - (uint8_t)charge);
                             
                             
                         }
@@ -372,7 +381,7 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                             if (charge == 0xFF)
                             {
                                 DB_printf("Paired!!!!\n");
-                                // TODO: Turn on LED 
+                                RGB_ON();
                                 CurrentState = DrivingState;
                             }
                         }
@@ -393,6 +402,7 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
 /*----------------------------- DrivingState ----------------------------*/
     case DrivingState:
     {
+        //DB_printf("DrivingState!\n");
         switch (ThisEvent.EventType)
         {
             case ES_TOREFUEL:
@@ -403,12 +413,36 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
             
             case ES_GATEBUTTON_PRESS:
             {
-                if (gatestate == true){
-                    gatestate = false;
+                if (doubleclick_control == false){
+                    doubleclick_control = true;
+                    ES_Timer_InitTimer(DOUBLECLICK_TIMER, DOUBLECLICK_PERIOD_MS);
                 }else{
-                    gatestate = true;
+                    ES_Event_t ThisEvent;
+                    ThisEvent.EventType = ES_DOUBLECLICK;
+                    ES_PostAll(ThisEvent);
+                    doubleclick_control = false;
+                    //ES_Timer_StopTimer(DOUBLECLICK_TIMER);
                 }
+                
+//                if (gatestate == true){
+//                    gatestate = false;
+//                }else{
+//                    gatestate = true;
+//                }
             }
+            break;
+            case ES_DOUBLECLICK:
+            {
+                if (stickstate == true){
+                    stickstate = false;
+                    DB_printf("Stick off!\n");
+                }else{
+                    stickstate = true;
+                    DB_printf("Stick on!\n");
+                }
+                
+            }
+            break;
             
             case ES_TIMEOUT:
             { 
@@ -429,7 +463,12 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
 
                     uint8_t digi = 0;
                     if (gatestate == true){
-                        digi += 0x01;
+                        digi += 1;
+                    }else{
+                        // None
+                    }
+                    if (stickstate == true){
+                        digi += 2;
                     }else{
                         // None
                     }
@@ -447,15 +486,27 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                             {
                                 DB_printf("Paired!!!!\n");
                             }else{
-                                DB_printf("Charge = %d\n", charge);
-                                Servo_SetAngle((uint8_t)charge);
+                                //DB_printf("Charge = %d\n", charge);
+                                Servo_SetAngle(150 - (uint8_t)charge);
                             }
                         }
                     }
 
-                    //DB_printf("Value of Joystick is x = %d, y = %d\n", X_Joystick, Y_Joystick);
-                }else if(GATECONTROL_TIMER == ThisEvent.EventParam){
+                    //DB_printf("Value of   is x = %d, y = %d\n", X_Joystick, Y_Joystick);
+                }else if (GATECONTROL_TIMER == ThisEvent.EventParam){
                     GateControl = false;
+                }else if (DOUBLECLICK_TIMER == ThisEvent.EventParam){
+                    if(doubleclick_control == true){
+                        doubleclick_control = false;
+                        if (gatestate == true){
+                            gatestate = false;
+                            DB_printf("Gate off!\n");
+                        }else{
+                            gatestate = true;
+                            DB_printf("Gate on!\n");
+                        }
+                    }
+                    
                 }
         }
         break;
@@ -469,6 +520,8 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
 /*----------------------------- ChargingState ----------------------------*/    
     case ChargingState:
     {
+        doubleclick_control = false;
+        //DB_printf("ChargingState!\n");
         switch (ThisEvent.EventType)
         {
             case ES_TODRIVE:
@@ -543,7 +596,7 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                                 // None
                             }else{
                                 DB_printf("Charge = %d\n", charge);
-                                Servo_SetAngle((uint8_t)charge);
+                                Servo_SetAngle(150 - (uint8_t)charge);
                             }
                         }
                     }

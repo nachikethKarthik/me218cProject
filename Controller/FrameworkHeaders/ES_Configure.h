@@ -266,7 +266,8 @@ typedef enum
   ES_TOREFUEL,
   ES_TODRIVE,
   ES_GATEBUTTON_PRESS,
-  ES_GATEBUTTON_RELEASE
+  ES_GATEBUTTON_RELEASE,
+  ES_DOUBLECLICK
 }ES_EventType_t;
 
 /****************************************************************************/
@@ -313,7 +314,7 @@ typedef enum
 #define TIMER0_RESP_FUNC PostControllerService
 #define TIMER1_RESP_FUNC PostControllerService
 #define TIMER2_RESP_FUNC PostControllerService
-#define TIMER3_RESP_FUNC TIMER_UNUSED
+#define TIMER3_RESP_FUNC PostControllerService
 #define TIMER4_RESP_FUNC TIMER_UNUSED
 #define TIMER5_RESP_FUNC TIMER_UNUSED
 #define TIMER6_RESP_FUNC TIMER_UNUSED
@@ -335,9 +336,9 @@ typedef enum
 // These symbolic names should be changed to be relevant to your application
 
 #define SERVICE0_TIMER 15
-#define XBEE_TIMER     0
-#define DISPLAY_TIMER  1
-#define GATECONTROL_TIMER  2
-
+#define XBEE_TIMER           0
+#define DISPLAY_TIMER        1
+#define GATECONTROL_TIMER    2
+#define DOUBLECLICK_TIMER   3
 
 #endif /* ES_CONFIGURE_H */
