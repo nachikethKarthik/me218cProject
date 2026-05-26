@@ -78,7 +78,7 @@
 // Pairing indicator: upright (paired) vs sideways (unpaired)
 //   0 deg   = 1.0 ms pulse = upright   (paired)
 //   90 deg  = 1.5 ms pulse = sideways  (unpaired)
-#define PAIR_IND_PAIRED_TICKS    PULSE_1MS_TICKS
+#define PAIR_IND_PAIRED_TICKS    2050u//PULSE_1MS_TICKS
 #define PAIR_IND_UNPAIRED_TICKS  PULSE_1P5MS_TICKS
 
 /*---------------------------- Module Functions ---------------------------*/
