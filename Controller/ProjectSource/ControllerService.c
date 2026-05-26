@@ -473,8 +473,34 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                         // None
                     }
                     
-                    XBeeHAL_SendDriving(XBEE_QUACKRAFT_TEAM5_ADDR, joy1, joy2, digi);
+                    //XBeeHAL_SendDriving(XBEE_QUACKRAFT_TEAM5_ADDR, joy1, joy2, digi);
 
+                    switch (boattarget)
+                    {
+                        case 1:
+                            XBeeHAL_SendDriving(XBEE_QUACKRAFT_TEAM1_ADDR, joy1, joy2, digi);
+                        break;
+                        case 2:
+                            XBeeHAL_SendDriving(XBEE_QUACKRAFT_TEAM2_ADDR, joy1, joy2, digi);
+                        break;
+                        case 3:
+                            XBeeHAL_SendDriving(XBEE_QUACKRAFT_TEAM3_ADDR, joy1, joy2, digi);
+                        break;
+                        case 4:
+                            XBeeHAL_SendDriving(XBEE_QUACKRAFT_TEAM4_ADDR, joy1, joy2, digi);
+                        break;
+                        case 5:
+                            XBeeHAL_SendDriving(XBEE_QUACKRAFT_TEAM5_ADDR, joy1, joy2, digi);
+                        break;
+                        case 0:
+                            //boattarget = 0;
+                        break;
+                        default:
+                            ;
+                    }
+                    
+                    
+                    
                     XBeeRxPacket_t rxPacket;
                     if (XBeeHAL_Update())
                     {
