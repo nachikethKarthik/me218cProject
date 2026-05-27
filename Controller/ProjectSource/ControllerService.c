@@ -199,7 +199,7 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
             }
             else if ('s' == ThisEvent.EventParam){
                 
-                Servo_SetAngle(150);
+                Servo_SetAngle(200);
             }
             else if ('b' == ThisEvent.EventParam){
                 uint32_t boatselect = Read_Potentiometer();
@@ -248,7 +248,7 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                             DB_printf("Paired!!!!\n");
                         }else{
                             DB_printf("Charge = %d\n", charge);
-                            Servo_SetAngle(150 - (uint8_t)charge);
+                            Servo_SetAngle(200 - (uint8_t)charge);
                             
                             
                         }
@@ -513,7 +513,7 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                                 DB_printf("Paired!!!!\n");
                             }else{
                                 //DB_printf("Charge = %d\n", charge);
-                                Servo_SetAngle(150 - (uint8_t)charge);
+                                Servo_SetAngle(200 - (uint8_t)charge);
                             }
                         }
                     }
@@ -622,7 +622,7 @@ ES_Event_t RunControllerService(ES_Event_t ThisEvent)
                                 // None
                             }else{
                                 DB_printf("Charge = %d\n", charge);
-                                Servo_SetAngle(150 - (uint8_t)charge);
+                                Servo_SetAngle(200 - (uint8_t)charge);
                             }
                         }
                     }
