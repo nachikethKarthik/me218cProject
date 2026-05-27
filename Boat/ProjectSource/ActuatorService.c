@@ -42,6 +42,11 @@
 
 
 /*----------------------------- Module Defines ----------------------------*/
+// Maximum thruster output, as a percentage of full PWM swing. Set to 60
+// to cap the motors at +/-60% of their absolute max forward/reverse, which
+// keeps them from over-thrusting at full joystick deflection.
+#define THRUSTER_MAX_OUTPUT_PCT  30
+
 // Timer2 period for 50 Hz PWM (20 ms) with PBCLK = 20 MHz, prescaler = 1:8
 #define PWM_PERIOD_TICKS    49999u   // PR2 value -> 20 ms period
  
@@ -435,8 +440,12 @@ static uint16_t SignedCmdToPulseTicks(int16_t cmd)
  
   // Linear map (-THRUSTER_MAX_CMD,+THRUSTER_MAX_CMD) to (PULSE_1MS_TICKS,PULSE_2MS_TICKS), centered at 1.5 ms.
   //   ticks = PULSE_1P5MS_TICKS + (cmd * half_span) / THRUSTER_MAX_CMD
-  // where half_span = (PULSE_2MS_TICKS - PULSE_1MS_TICKS) / 2 = 1250 ticks.
-  int32_t halfSpan = (int32_t)(PULSE_2MS_TICKS - PULSE_1MS_TICKS) / 2;
+  
+  // Full half-span is 1250 ticks (1.5 ms +/- 0.5 ms). Scale down by the
+// THRUSTER_MAX_OUTPUT_PCT to cap how aggressive the thrusters can get.
+    int32_t halfSpan = ((int32_t)(PULSE_2MS_TICKS - PULSE_1MS_TICKS) / 2) *
+                   THRUSTER_MAX_OUTPUT_PCT / 100;
+
   int32_t offset   = ((int32_t)cmd * halfSpan) / (int32_t)THRUSTER_MAX_CMD;
   int32_t ticks    = (int32_t)PULSE_1P5MS_TICKS + offset;
  

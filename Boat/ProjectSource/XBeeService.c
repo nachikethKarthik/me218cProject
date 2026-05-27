@@ -63,8 +63,8 @@
 #define JOY_DEADBAND            5
  
 // Steam (a.k.a. fuel) bookkeeping
-#define STEAM_MAX               150     // per comms-committee protocol
-#define STEAM_CHARGE_INCREMENT  6       // each charging msg adds this
+#define STEAM_MAX               200     // per comms-committee protocol
+#define STEAM_CHARGE_INCREMENT  8       // each charging msg adds this
  
 // Pair-ack sentinel value sent in the charge byte during pairing handshake
 #define CHARGE_BYTE_PAIR_ACK    0xFF
