@@ -45,7 +45,7 @@
 // Maximum thruster output, as a percentage of full PWM swing. Set to 60
 // to cap the motors at +/-60% of their absolute max forward/reverse, which
 // keeps them from over-thrusting at full joystick deflection.
-#define THRUSTER_MAX_OUTPUT_PCT  30
+#define THRUSTER_MAX_OUTPUT_PCT  50
 
 // Timer2 period for 50 Hz PWM (20 ms) with PBCLK = 20 MHz, prescaler = 1:8
 #define PWM_PERIOD_TICKS    49999u   // PR2 value -> 20 ms period
